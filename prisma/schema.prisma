@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Curriculum {
+  id Int @id @default(autoincrement())
+  name String
+  birthdate DateTime
+  cpf String @db.VarChar(14)
+  tel String @db.VarChar(19)
+  email String @db.VarChar(255)
+  address String
+  city String
+  uf String @db.VarChar(2)
+  fields String 
+  formation String
+  conclusion DateTime
+  general_info String @db.Text 
+  personal_references String @db.Text
+  password String
+  created_at DateTime @default(now())
+}
+
+model Companies {
+  id Int @id @default(autoincrement())
+  fantasy_name String
+  cnpj String @db.VarChar(19)
+  email String @db.VarChar(255)
+  contact String
+  tel String @db.VarChar(15)
+  address String
+  city String
+  uf String @db.VarChar(2)
+  password String
+  created_at DateTime @default(now())
+}
+
+model Vacancies {
+  id Int @id @default(autoincrement())
+  title String
+  description String @db.Text
+  fields String 
+  requirements String
+  salary Int
+  companie Int
+  contact String
+  tel String @db.VarChar(15)
+  city String
+  uf String @db.VarChar(2)
+  created_at DateTime @default(now())
+}
