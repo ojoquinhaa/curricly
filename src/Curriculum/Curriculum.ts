@@ -1,4 +1,4 @@
-import conn from "@config/conn";
+import conn from "../config/conn";
 import { Curriculum } from "@prisma/client";
 import bcrypt from "bcrypt";
 

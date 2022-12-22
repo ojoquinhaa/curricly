@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { validator } from "@middleware/validator";
+import { validator } from "../middleware/validator";
 import { Curriculum } from "@prisma/client";
 import { Router, Request, Response } from "express";
 import { body, query } from "express-validator";

@@ -1,9 +1,9 @@
 import { Companies, Vacancies } from "@prisma/client";
-import { validator } from "@middleware/validator";
+import { validator } from "../middleware/validator";
 import { Router, Request, Response } from "express";
 import { body, param, query } from "express-validator";
 import VacanciesModels from "./Vacancie";
-import CompaniesModels from "@companies/Companies";
+import CompaniesModels from "../Companies/Companies";
 
 const router: Router = Router();
 

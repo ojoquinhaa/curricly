@@ -1,0 +1,29 @@
+{
+  "name": "curricly",
+  "version": "2.0.0",
+  "description": "Build de uma api de gerenciamento de um banco de empregos",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joca-Luiz/curricly.git"
+  },
+  "author": "João Luiz Prado Neiva",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Joca-Luiz/curricly/issues"
+  },
+  "homepage": "https://github.com/Joca-Luiz/curricly#readme",
+  "dependencies": {
+    "@prisma/client": "^4.8.0",
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-validator": "^6.14.2",
+    "helmet": "^6.0.1",
+    "prisma": "^4.8.0"
+  }
+}

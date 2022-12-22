@@ -1,8 +1,8 @@
-import app from "@config/app";
+import app from "./config/app";
 import dotenv from "dotenv";
-import curriculumRouter from "@curriculum/index";
-import companieRouter from "@companies/index";
-import vacancieRouter from "@vacancies/index";
+import curriculumRouter from "./Curriculum/index";
+import companieRouter from "./Companies/index";
+import vacancieRouter from "./Vacancies/index";
 
 dotenv.config();
 

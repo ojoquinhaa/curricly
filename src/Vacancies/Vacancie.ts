@@ -1,4 +1,4 @@
-import conn from "@config/conn";
+import conn from "../config/conn";
 import { Vacancies } from "@prisma/client";
 
 class VacanciesModels {
