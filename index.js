@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var _a;
+Object.defineProperty(exports, "__esModule", { value: true });
+const app_1 = __importDefault(require("./config/app"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const index_1 = __importDefault(require("./Curriculum/index"));
+const index_2 = __importDefault(require("./Companies/index"));
+const index_3 = __importDefault(require("./Vacancies/index"));
+const index_4 = __importDefault(require("./Admin/index"));
+const index_5 = __importDefault(require("./Password/index"));
+dotenv_1.default.config();
+app_1.default.use("/api/curriculum", index_1.default);
+app_1.default.use("/api/companies", index_2.default);
+app_1.default.use("/api/vacancies", index_3.default);
+app_1.default.use("/api/admin", index_4.default);
+app_1.default.use("/api/forgetPassword", index_5.default);
+const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 4000;
+app_1.default.listen(port);
