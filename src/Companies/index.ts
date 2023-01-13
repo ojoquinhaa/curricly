@@ -1,8 +1,9 @@
+import Mailer from "../Mailer/Mailer";
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { validator } from "../middleware/validator";
 import { Companies } from "@prisma/client";
 import { Router, Request, Response } from "express";
-import { body, query } from "express-validator";
+import { body, query, param } from "express-validator";
 import CompaniesModels from "./Companies";
 
 const router: Router = Router();
@@ -11,8 +12,8 @@ router.get("/", (request: Request, response: Response): void => {
   CompaniesModels.get()
     .then((companies: Array<{}> | null) => {
       if (companies?.length === 0) {
-        response.status(200).json({
-          message: "Nenhuma compania foi encontrado.",
+        response.status(400).json({
+          msg: "Nenhuma compania foi encontrado.",
         });
         return;
       }
@@ -29,6 +30,37 @@ router.get("/", (request: Request, response: Response): void => {
       })
     );
 });
+
+router.get(
+  "/id/:id",
+  param("id").notEmpty().isNumeric(),
+  validator,
+  (request: Request, response: Response): void => {
+    const id: number = parseInt(request.params.id);
+
+    CompaniesModels.getById(id)
+      .then((companie: {} | null) => {
+        if (companie === null) {
+          response.status(400).json({
+            msg: "Nenhum curriculo foi encontrado.",
+            id,
+          });
+          return;
+        }
+
+        response.status(200).json({
+          success: true,
+          companie,
+        });
+      })
+      .catch((error) =>
+        response.status(500).json({
+          msg: "Erro no servidor, tente novamente mais tarde.",
+          error,
+        })
+      );
+  }
+);
 
 router.post(
   "/login",
@@ -67,7 +99,7 @@ router.post(
   body("fantasy_name").isLength({ min: 5, max: 191 }),
   body("contact").isLength({ min: 5, max: 191 }),
   body("cnpj").isLength({ min: 18, max: 19 }),
-  body("tel").isLength({ min: 15, max: 15 }),
+  body("tel").isLength({ min: 19, max: 19 }),
   body("email").isLength({ min: 5, max: 255 }).isEmail(),
   body("address").isLength({ min: 5, max: 191 }),
   body("city").isLength({ min: 5, max: 191 }),
@@ -77,7 +109,7 @@ router.post(
   async (request: Request, response: Response): Promise<void> => {
     const companieValues: Companies = request.body;
     await CompaniesModels.create(companieValues)
-      .then((companie: Companies | null) => {
+      .then(async (companie: Companies | null) => {
         if (companie === null) {
           response.status(400).json({
             msg: "Compania ja cadastrado, tente fazer login.",
@@ -85,9 +117,18 @@ router.post(
           return;
         }
 
+        const mailOptions = Mailer.createMailOptions(
+          companie.email,
+          "Sucesso ao cadastrar a sua empresa no sistema currícular do CRCGO",
+          CompaniesModels.createMailCompanieHTML(companie)
+        );
+
+        const mail = await Mailer.send(mailOptions);
+
         response.status(201).json({
           success: true,
           companie,
+          mail,
         });
       })
       .catch((error) => {
@@ -119,7 +160,7 @@ router.delete(
         await CompaniesModels.delete(companie.id).then(
           (companie: Companies | null): void => {
             response.status(200).json({
-              msg: "Empresa deletado com sucesso",
+              success: true,
               companie,
             });
           }

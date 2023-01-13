@@ -3,8 +3,75 @@ import { Curriculum } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 class CurriculumModels {
-  async get(): Promise<Array<{}> | null> {
-    return await conn.curriculum.findMany({
+  async get(formation: string, field: string): Promise<Array<{}> | null> {
+    return await new Promise((resolve, reject) => {
+      conn.curriculum
+        .findMany()
+        .then((curriculuns: Curriculum[] | null) => {
+          if (curriculuns === null || curriculuns.length === 0) {
+            resolve(null);
+            return;
+          }
+
+          const curriculumList: Array<Partial<Curriculum>> | null = [];
+          curriculuns.forEach((curriculum: Partial<Curriculum>) => {
+            if (
+              (formation === undefined || formation === "") &&
+              (field === undefined || field === "")
+            ) {
+              delete curriculum.password;
+              curriculumList.push(curriculum);
+              return;
+            }
+
+            if (field === undefined || field === "") {
+              if (curriculum.formation !== formation) {
+                return;
+              }
+            }
+
+            if (formation === undefined || formation === "") {
+              // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+              if (!String(curriculum.fields).match(field)) {
+                return;
+              }
+            }
+
+            if (
+              field !== undefined &&
+              formation !== undefined &&
+              field !== "" &&
+              formation !== ""
+            ) {
+              if (
+                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+                !String(curriculum.fields).match(field) ||
+                curriculum.formation !== formation
+              ) {
+                return;
+              }
+            }
+
+            delete curriculum.password;
+            curriculumList.push(curriculum);
+          });
+
+          if (curriculumList === null || curriculumList.length === 0) {
+            resolve(null);
+            return;
+          }
+
+          resolve(curriculumList);
+        })
+        .catch((e) => reject(e));
+    });
+  }
+
+  async getById(id: number): Promise<{} | null> {
+    return await conn.curriculum.findUnique({
+      where: {
+        id,
+      },
       select: {
         password: false,
         id: true,
@@ -112,13 +179,86 @@ class CurriculumModels {
     });
   }
 
-  async update(data: Curriculum, id: number): Promise<Curriculum | null> {
-    return await conn.curriculum.update({
-      data,
-      where: {
-        id,
-      },
+  formatDate(date: Date): string {
+    return `${((): string => {
+      if (date.getDay() > 9) {
+        return String(date.getDay());
+      } else {
+        return `0${date.getDay()}`;
+      }
+    })()}/${((): string => {
+      if (date.getMonth() > 9) {
+        return String(date.getMonth());
+      } else {
+        return `0${date.getMonth()}`;
+      }
+    })()}/${String(date.getFullYear())}
+    `;
+  }
+
+  async update(
+    data: Curriculum,
+    email: string,
+    password: string
+  ): Promise<Curriculum | null> {
+    return await new Promise((resolve, reject) => {
+      this.login(email, password)
+        .then(async (login: Curriculum | null) => {
+          if (login === null) {
+            resolve(null);
+            return;
+          }
+
+          const birthdate = new Date(data.birthdate);
+          const conclusion = new Date(data.conclusion);
+
+          data.birthdate = birthdate;
+          data.conclusion = conclusion;
+
+          const result: Curriculum | null = await conn.curriculum.update({
+            data,
+            where: {
+              id: login.id,
+            },
+          });
+
+          resolve(result);
+        })
+        .catch((e) => reject(e));
     });
+  }
+
+  createMailCurriculumHTML(curriculum: Curriculum): string {
+    const birthdate: string = this.formatDate(curriculum.birthdate);
+
+    return `
+    <div align="center">
+      <img
+        alt="CRCGO logo"
+        src="https://crcgo.org.br/novo/wp-content/themes/crc/images/logo.png"
+      />
+      <div style="text-align: center; margin-top: 10px">
+        <h4>
+          Bem vindo ao sistema currícular do CRCGO, segue abaixo as informações
+          do seu currículo:
+        </h4>
+        <ul style="list-style: none; margin-top: 10px">
+          <li>Nome: <strong>${curriculum.name}</strong></li>
+          <li>Email: <strong>${curriculum.email}</strong></li>
+          <li>Cidade/Estado: <strong>${curriculum.city}/${curriculum.uf}</strong></li>
+          <li>CPF: <strong>${curriculum.cpf}</strong></li>
+          <li>Data de nascimento: <strong>${birthdate}</strong></li>
+          <li>Referencias pessoais: <strong>${curriculum.personal_references}</strong></li>
+          <li>Informações gerais: <strong>${curriculum.general_info}</strong></li>
+        </ul>
+        <hr />
+        <small style="color: gray"
+          >Faça login com sua senha de acesso para poder alterar essas
+          informações.</small
+        >
+      </div>
+    </div>
+    `;
   }
 
   async encrypt(password: string, rounds: number = 10): Promise<string> {

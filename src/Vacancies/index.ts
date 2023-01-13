@@ -1,3 +1,4 @@
+import { SentMessageInfo } from "nodemailer/lib/smtp-transport";
 import { Companies, Vacancies } from "@prisma/client";
 import { validator } from "../middleware/validator";
 import { Router, Request, Response } from "express";
@@ -8,7 +9,10 @@ import CompaniesModels from "../Companies/Companies";
 const router: Router = Router();
 
 router.get("/", (request: Request, response: Response) => {
-  VacanciesModels.get()
+  const companie: string = request.query.companie as string;
+  const fields: string = request.query.fields as string;
+
+  VacanciesModels.get(companie, fields)
     .then((vacancies: Vacancies[] | null) => {
       if (vacancies === null || vacancies.length === 0) {
         response.status(400).json({
@@ -22,25 +26,82 @@ router.get("/", (request: Request, response: Response) => {
         vacancies,
       });
     })
-    .catch((e) =>
+    .catch((e) => {
       response.status(500).json({
         msg: "Erro no servidor tente novamente mais tarde",
         e,
-      })
-    );
+      });
+    });
 });
+
+router.get(
+  "/id/:id",
+  param("id").isNumeric(),
+  validator,
+  (request: Request, response: Response) => {
+    const id: number = parseInt(request.params.id);
+
+    VacanciesModels.getById(id)
+      .then((vacancie: Vacancies | null) => {
+        if (vacancie === null) {
+          response.status(400).json({
+            msg: "Não foi encontrado nenhuma vaga",
+          });
+          return;
+        }
+
+        response.status(200).json({
+          success: true,
+          vacancie,
+        });
+      })
+      .catch((e) => {
+        response.status(500).json({
+          msg: "Erro no servidor tente novamente mais tarde",
+          e,
+        });
+      });
+  }
+);
+
+router.get(
+  "/companie/:id",
+  param("id").isNumeric(),
+  validator,
+  (request: Request, response: Response) => {
+    const id: number = parseInt(request.params.id);
+    VacanciesModels.getByCompanie(id)
+      .then((vacancies: Vacancies[] | null) => {
+        if (vacancies === null || vacancies.length === 0) {
+          response.status(400).json({
+            msg: "Não foi encontrada nenhuma vaga.",
+            id,
+          });
+          return;
+        }
+
+        response.status(200).json({
+          success: true,
+          vacancies,
+        });
+      })
+      .catch((e) => response.status(500).json(e));
+  }
+);
 
 router.post(
   "/",
   body("title").isLength({ min: 5, max: 191 }),
   body("description").notEmpty(),
   body("fields").isLength({ min: 5, max: 191 }),
-  body("tel").isLength({ min: 15, max: 15 }),
+  body("tel").isLength({ min: 19, max: 19 }),
   body("contact").isLength({ min: 5, max: 255 }).isEmail(),
   body("requirements").isLength({ min: 5, max: 191 }),
   body("city").isLength({ min: 5, max: 191 }),
   body("uf").isLength({ min: 2, max: 2 }),
   body("salary").isNumeric().notEmpty(),
+  query("email").notEmpty(),
+  query("password").notEmpty(),
   validator,
   (request: Request, response: Response): void => {
     const email: string = request.query.email as string;
@@ -54,6 +115,8 @@ router.post(
           });
           return;
         }
+
+        request.body.salary = parseInt(request.body.salary);
 
         const vacancieValues: Vacancies = request.body;
         vacancieValues.companie = companie.id;
@@ -71,16 +134,50 @@ router.post(
               vacancie,
             });
           })
-          .catch((error) =>
+          .catch((error) => {
             response.status(500).json({
               msg: "Erro no servidor, tente novamente mais tarde.",
               error,
-            })
-          );
+            });
+          });
+      })
+      .catch((e) => {
+        response.status(500).json({
+          msg: "Erro no servidor. Por favor tente novamente mais tarde",
+          e,
+        });
+      });
+  }
+);
+
+router.post(
+  "/sendCurriculumTo/:id",
+  param("id").isNumeric().notEmpty(),
+  body("email").notEmpty().isEmail(),
+  body("password").notEmpty(),
+  validator,
+  (request: Request, response: Response): void => {
+    const id: number = parseInt(request.params.id);
+    const email: string = request.body.email as string;
+    const password: string = request.body.password as string;
+
+    VacanciesModels.sendCurriculum(id, email, password)
+      .then((mail: SentMessageInfo | null) => {
+        if (mail === null) {
+          response.status(400).json({
+            msg: "As credenciáis estão inválidas.",
+          });
+          return;
+        }
+
+        response.status(200).json({
+          success: true,
+          mail,
+        });
       })
       .catch((e) =>
         response.status(500).json({
-          msg: "Erro no servidor. Por favor tente novamente mais tarde",
+          msg: "Erro no servidor, tente novamente mais tarde.",
           e,
         })
       );

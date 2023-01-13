@@ -32,7 +32,7 @@ model Companies {
   cnpj String @db.VarChar(19)
   email String @db.VarChar(255)
   contact String
-  tel String @db.VarChar(15)
+  tel String @db.VarChar(19)
   address String
   city String
   uf String @db.VarChar(2)
@@ -49,8 +49,21 @@ model Vacancies {
   salary Int
   companie Int
   contact String
-  tel String @db.VarChar(15)
+  tel String @db.VarChar(19)
   city String
   uf String @db.VarChar(2)
   created_at DateTime @default(now())
+}
+
+model Admin {
+  id Int @id @default(autoincrement())
+  user String
+  password String
+}
+
+model RequestPassword {
+  request String @id
+  type String
+  id Int
+  create_at DateTime @default(now())
 }

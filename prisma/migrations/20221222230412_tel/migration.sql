@@ -6,5 +6,9 @@
 
 */
 -- AlterTable
+ALTER TABLE `companies` MODIFY `tel` VARCHAR(19) NOT NULL;
+
+-- AlterTable
 ALTER TABLE `vacancies` MODIFY `salary` INTEGER NOT NULL,
-    MODIFY `companie` INTEGER NOT NULL;
+    MODIFY `companie` INTEGER NOT NULL,
+    MODIFY `tel` VARCHAR(19) NOT NULL;
